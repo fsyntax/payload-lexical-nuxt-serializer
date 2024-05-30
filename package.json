@@ -1,8 +1,8 @@
 {
   "name": "payload-lexical-nuxt-serializer",
-  "version": "1.0.0",
-  "description": "My new Nuxt module",
-  "repository": "your-org/my-module",
+  "version": "1.0.1",
+  "description": "Nuxt module to serialize Payload lexical nodes",
+  "repository": "fsyntax/payload-lexical-nuxt-serializer",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -29,6 +29,7 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
+    "defu": "^6.1.4",
     "@nuxt/kit": "^3.11.2"
   },
   "devDependencies": {
