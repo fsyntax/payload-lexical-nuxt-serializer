@@ -1,6 +1,9 @@
 <script setup lang="ts">
 defineProps<{
-  block: any // define your block type here
+  block: {
+    title: string
+    subtext: string
+  }
 }>()
 </script>
 
@@ -8,9 +11,5 @@ defineProps<{
   <div>
     <h1>{{ block.title }}</h1>
     <RenderContent :content="block.subtext" />
-    <details>
-      <summary>Block data</summary>
-      <pre>{{ block }}</pre>
-    </details>
   </div>
 </template>

@@ -67,7 +67,7 @@ export interface ListItemNode extends BaseNode {
 }
 export interface BlockNode extends BaseNode {
   type: 'block'
-  fields: any
+  fields: object
   version: number
   format?: string | number
 }

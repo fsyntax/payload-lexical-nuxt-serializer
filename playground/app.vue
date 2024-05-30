@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { blockMockData } from '../src/mockData'
+import { pageMockData } from '../src/mockData'
 </script>
 
 <template>
   <div>
-    <BlockRenderer :blocks="blockMockData.content" />
+    <BlockRenderer :blocks="pageMockData.content" />
   </div>
 </template>

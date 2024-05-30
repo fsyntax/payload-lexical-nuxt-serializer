@@ -1,5 +1,5 @@
 import escapeHTML from 'escape-html'
-import type { VNode } from 'vue'
+import { type VNode } from 'vue'
 import { h } from 'vue'
 import {
   IS_ALIGN_CENTER,
@@ -11,9 +11,9 @@ import {
   IS_SUPERSCRIPT,
   IS_UNDERLINE,
 } from '../RichTextNodeFormat'
-import { NuxtImg, NuxtLink } from '#components'
-import type { ModuleOptions, BaseNode, Classes, LinkNode, BlockNode, Node, UploadNode } from '~/src/types'
-import { defineNuxtPlugin, useRuntimeConfig } from '#app'
+import { BlockRenderer, NuxtImg, NuxtLink } from '#components'
+import type { BaseNode, Classes, LinkNode, BlockNode, Node, UploadNode } from '~/src/types'
+import { defineNuxtPlugin } from '#app'
 
 /**
  * Mapping of text formatting types to CSS classes.
@@ -115,28 +115,8 @@ export default defineNuxtPlugin((_nuxtApp) => {
    * @returns The handled block type component.
    */
   async function handleBlockType(node: BlockNode): Promise<VNode | null> {
-    // const pluginRuntimeConfig = useRuntimeConfig().public.payloadLexicalHtmlSerializer as ModuleOptions
-    // if (!pluginRuntimeConfig?.components) {
-    //   console.warn('No components defined in the module options')
-    //   return null
-    // }
-    //
-    // const { components } = pluginRuntimeConfig
-    //
-    // if (!components) {
-    //   console.warn('No components defined in the module options')
-    //   return null
-    // }
-    //
-    // if (!node.blockType) {
-    //   console.warn('No block type defined for block')
-    //   return null
-    // }
-    //
-    // const component = components[node.blockType]
-
-    return h('div', {
-      // block: node,
+    return h(BlockRenderer, {
+      blocks: [node.fields],
     })
   }
 
@@ -181,78 +161,87 @@ export default defineNuxtPlugin((_nuxtApp) => {
    * @param visitedNodes - The set of visited nodes.
    * @returns The array of serialized nodes.
    */
-  function serialize(nodes: Node[], classes: Classes[] = [], renderNodeComponent: boolean = false, visitedNodes = new Set<Node>()): VNode[] {
+  async function serialize(nodes: Node[], classes: Classes[] = [], renderNodeComponent: boolean = false, visitedNodes = new Set<Node>()): Promise<VNode[]> {
     if (!Array.isArray(nodes)) nodes = [nodes]
 
-    return nodes
-      .map((node) => {
-        if (!node || visitedNodes.has(node)) return null
+    const serializedNodes: VNode[] = []
 
-        const visitedNodesCopy = new Set(visitedNodes)
-        visitedNodesCopy.add(node)
+    for (const node of nodes) {
+      if (!node || visitedNodes.has(node)) continue
 
-        const children = node.children ? serialize(node.children, classes, renderNodeComponent, visitedNodesCopy) : []
-        const classList = getAlignmentClass(node, classes)
-        if (node.blockType) {
-          node.type = 'block'
+      const visitedNodesCopy = new Set(visitedNodes)
+      visitedNodesCopy.add(node)
+
+      const children = node.children ? await serialize(node.children, classes, renderNodeComponent, visitedNodesCopy) : []
+      const classList = getAlignmentClass(node, classes)
+
+      let serializedNode: VNode | null = null
+
+      switch (node.type) {
+        case 'root':
+          serializedNode = h('div', { class: classList || undefined }, children)
+          break
+        case 'paragraph': {
+          let paragraphClass = getClassForTag('p', classes)
+          if (node.format === 'center') {
+            paragraphClass += ' text-center'
+          }
+          serializedNode = h('p', { class: paragraphClass || undefined }, children)
+          break
         }
-        switch (node.type) {
-          case 'root': {
-            if (classList !== '') {
-              return h('div', { class: classList }, children)
+        case 'text': {
+          const escapedText = escapeHTML(node.text).replace(/&amp;|&quot;|&apos;|&lt;|&gt;|&#39;/g, (match: string) => {
+            switch (match) {
+              case '&amp;':
+                return '&'
+              case '&quot;':
+                return '"'
+              case '&apos;':
+                return '\''
+              case '&lt;':
+                return '<'
+              case '&gt;':
+                return '>'
+              case '&#39;':
+                return '\''
+              default:
+                return match
             }
-            return h('div', { }, children)
-          }
-          case 'paragraph': {
-            let paragraphClass = getClassForTag('p', classes)
-            if (node.format === 'center') {
-              paragraphClass += ' text-center'
-            }
-            if (paragraphClass !== '') {
-              return h('p', { class: paragraphClass }, children)
-            }
-            return h('p', { }, children)
-          }
-          case 'text': {
-            const escapedText = escapeHTML(node.text).replace(/&amp;|&quot;|&apos;|&lt;|&gt;|&#39;/g, (match: string) => {
-              switch (match) {
-                case '&amp;': return '&'
-                case '&quot;': return '"'
-                case '&apos;': return '\''
-                case '&lt;': return '<'
-                case '&gt;': return '>'
-                case '&#39;': return '\''
-                default: return match
-              }
-            })
-
-            return applyTextFormatting(escapedText, node.format as number, classes)
-          }
-          case 'linebreak':
-            return h('br')
-          case 'link':
-            return serializeLink(node, children, classes)
-          case 'list': {
-            const listTag = node.listType === 'bullet' ? 'ul' : 'ol'
-            return h(listTag, { class: getClassForTag(listTag, classes) }, children)
-          }
-          case 'listitem':
-            return h('li', { class: getClassForTag('li', classes) }, children)
-          case 'block': {
-            return handleBlockType(node) || null
-          }
-          case 'upload': {
-            return handleUpload(node) || null
-          }
-          default: {
-            if (classList !== '') {
-              return h('p', { class: classList }, children)
-            }
-            return h('p', {}, children)
-          }
+          })
+          serializedNode = applyTextFormatting(escapedText, node.format as number, classes) as VNode
+          break
         }
-      })
-      .filter((node): node is VNode => node !== null)
+        case 'linebreak':
+          serializedNode = h('br')
+          break
+        case 'link':
+          serializedNode = serializeLink(node, children, classes)
+          break
+        case 'list': {
+          const listTag = node.listType === 'bullet' ? 'ul' : 'ol'
+          serializedNode = h(listTag, { class: getClassForTag(listTag, classes) }, children)
+          break
+        }
+        case 'listitem':
+          serializedNode = h('li', { class: getClassForTag('li', classes) }, children)
+          break
+        case 'block':
+          serializedNode = await handleBlockType(node)
+          break
+        case 'upload':
+          serializedNode = handleUpload(node)
+          break
+        default:
+          serializedNode = h('p', { class: classList || undefined }, children)
+          break
+      }
+
+      if (serializedNode) {
+        serializedNodes.push(serializedNode)
+      }
+    }
+
+    return serializedNodes
   }
 
   /**

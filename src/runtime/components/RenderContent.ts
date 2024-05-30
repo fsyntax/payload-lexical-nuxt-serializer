@@ -20,16 +20,14 @@ export const RenderContent = {
       default: () => [],
     },
   },
-  setup(props: Props) {
+  async setup(props: Props) {
     const { $serialize } = useNuxtApp()
     if (props.content?.root) {
-      return () => $serialize(props.content.root, props.classConfig)
-    }
-    else if (props.content) {
-      return () => $serialize(props.content, props.classConfig)
+      const serializedContent = await $serialize(props.content.root, props.classConfig)
+      return () => serializedContent
     }
     else {
-      return () => null
+      console.warn('Could not render content: No content provided.')
     }
   },
 }

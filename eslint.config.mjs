@@ -20,6 +20,6 @@ export default createConfigForNuxt({
     {
       rules: {
         'typescript-eslint/prefer-ts-expect-error': 'off',
-      }
-    }
+      },
+    },
   )

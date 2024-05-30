@@ -1,4 +1,6 @@
-import { defineNuxtModule, addPlugin, createResolver, useLogger, addComponent } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, createResolver, addComponent } from '@nuxt/kit'
+import type { Input } from 'normalize-package-data'
+import type { ComponentsOptions } from '@nuxt/schema'
 import defu from 'defu'
 import type { ModuleOptions } from './types'
 
@@ -14,7 +16,6 @@ export default defineNuxtModule<ModuleOptions>({
     components: undefined,
   },
   async setup(options, nuxt) {
-    const logger = useLogger('payload-lexical-html-serializer')
     const resolver = createResolver(import.meta.url)
 
     addPlugin(resolver.resolve('./runtime/serializer'), {
@@ -30,11 +31,27 @@ export default defineNuxtModule<ModuleOptions>({
       filePath: resolver.resolve('./runtime/components/BlockRenderer.vue'),
     })
 
-    if (!options.components) {
-      logger.warn('No blocks defined in the module options')
-    }
-    nuxt.options.runtimeConfig.public.payloadLexicalHtmlSerializer = defu(nuxt.options.runtimeConfig.public.payloadLexicalHtmlSerializer, {
-      components: options.components,
+    await addComponent({
+      name: 'CustomComponentRenderer',
+      filePath: resolver.resolve('./runtime/components/CustomComponentRenderer.vue'),
     })
+
+    if (options.components) {
+      nuxt.options.runtimeConfig.public.payloadLexicalNuxtSerializer = defu(nuxt.options.runtimeConfig.public.payloadLexicalNuxtSerializer as Input, {
+        components: options.components,
+      })
+    }
+    const componentsOptions = nuxt.options.components as ComponentsOptions
+    nuxt.options.components = {
+      ...(componentsOptions && typeof componentsOptions === 'object' ? componentsOptions : {}),
+      dirs: [
+        ...(isComponentsOptions(componentsOptions as ComponentsOptions) ? componentsOptions.dirs : []),
+        '~/components/blocks', // Add the new directory
+      ],
+    }
   },
 })
+
+function isComponentsOptions(value: ComponentsOptions): boolean {
+  return value && typeof value === 'object' && !Array.isArray(value)
+}

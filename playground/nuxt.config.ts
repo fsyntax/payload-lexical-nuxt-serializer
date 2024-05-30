@@ -1,8 +1,10 @@
 export default defineNuxtConfig({
   modules: ['../src/module'],
-  payloadLexicalHtmlSerializer: {
+  payloadLexicalNuxtSerializer: {
     components: {
       pageTitle: 'BlockPageTitle',
+      layout: 'BlockLayout',
+      callToAction: 'BlockCallToAction',
     },
   },
   devtools: { enabled: true },

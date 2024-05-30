@@ -1,16 +1,18 @@
 <script setup lang="ts">
+import type { BlockNode } from '../../../src/types'
+
 defineProps<{
-  block: any // define your block type here
+  block: {
+    type: BlockNode
+    text: {
+      ctaButtonText: string
+    }
+  }
 }>()
 </script>
 
 <template>
   <div>
-    <h1>{{ block.title }}</h1>
-    <RenderContent :content="block.subtext" />
-    <details>
-      <summary>Block data</summary>
-      <pre>{{ block }}</pre>
-    </details>
+    <button>{{ block.text.ctaButtonText }}</button>
   </div>
 </template>
