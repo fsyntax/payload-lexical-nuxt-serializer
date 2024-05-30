@@ -38,7 +38,7 @@ export default defineNuxtConfig({
   components: true,
   payloadLexicalNuxtSerializer: {
     componentsMap: {
-      Hero: 'BlockHero',
+      hero: 'BlockHero',
     },
   },
 })
@@ -187,7 +187,7 @@ export default defineNuxtConfig({
   components: true,
   payloadLexicalNuxtSerializer: {
     componentsMap: {
-      Hero: 'BlockHero',
+      hero: 'BlockHero',
     },
   },
 })

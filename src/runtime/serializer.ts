@@ -1,19 +1,21 @@
 import escapeHTML from 'escape-html'
 import { type VNode } from 'vue'
 import { h } from 'vue'
-import {
-  IS_ALIGN_CENTER,
-  IS_BOLD,
-  IS_CODE,
-  IS_ITALIC,
-  IS_STRIKETHROUGH,
-  IS_SUBSCRIPT,
-  IS_SUPERSCRIPT,
-  IS_UNDERLINE,
-} from '../RichTextNodeFormat'
 import { BlockRenderer, NuxtImg, NuxtLink } from '#components'
 import type { BaseNode, Classes, LinkNode, BlockNode, Node, UploadNode } from '~/src/types'
 import { defineNuxtPlugin } from '#app'
+
+// This copy-and-pasted from somewhere in lexical here: https://github.com/facebook/lexical/blob/c2ceee223f46543d12c574e62155e619f9a18a5d/packages/lexical/src/LexicalConstants.ts
+
+// Text node formatting
+const IS_BOLD = 1
+const IS_ITALIC = 1 << 1
+const IS_STRIKETHROUGH = 1 << 2
+const IS_UNDERLINE = 1 << 3
+const IS_CODE = 1 << 4
+const IS_SUBSCRIPT = 1 << 5
+const IS_SUPERSCRIPT = 1 << 6
+const IS_ALIGN_CENTER = 2
 
 /**
  * Mapping of text formatting types to CSS classes.

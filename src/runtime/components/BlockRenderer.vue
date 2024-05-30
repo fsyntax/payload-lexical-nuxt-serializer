@@ -4,7 +4,7 @@ import { defineAsyncComponent } from 'vue'
 import type { BlockNode } from '~/src/types'
 
 defineProps<{
-  blocks: BlockNode[]
+  blocks: Partial<BlockNode>[]
 }>()
 
 const componentsMap = useRuntimeConfig().public?.payloadLexicalNuxtSerializer?.components
